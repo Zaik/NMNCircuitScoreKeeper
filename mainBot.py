@@ -10,9 +10,8 @@ from credentials import token
 import SREUinterface
 from SREUinterface import getPlayerInfo
 
-description = '''An example bot to showcase the discord.ext.commands extension
-module.
-There are a number of utility commands being showcased here.'''
+description = '''The EU Grandmaster Melee bot
+Handles various utility functions'''
 bot = commands.Bot(command_prefix='?', description=description)
 
 @bot.event
@@ -38,6 +37,18 @@ def obtainRoleFromName(name,server):
         return None
     return toReturn[0]
 
+@bot.command(description='Adds you to the notification group',pass_context=True)
+async def notify(ctx):
+	notifyRole=obtainRoleFromName('Notify',ctx.message.server)
+	await bot.add_roles(ctx.message.author,notifyRole)
+	await bot.reply('You will now be notified when the "Notify" tag is used')
+	
+@bot.command(description='Adds you to the notification group',pass_context=True)
+async def mute(ctx):
+	notifyRole=obtainRoleFromName('Notify',ctx.message.server)
+	await bot.remove_roles(ctx.message.author,notifyRole)
+	await bot.reply('You will no longer be notified when the "Notify" tag is used')
+	
 async def setRoles(member,jsonresponse,server):
     mainrole=obtainRoleFromName(jsonresponse['main'],server)
     nationalityrole=obtainRoleFromName(jsonresponse['country'],server)
@@ -67,13 +78,13 @@ async def obtainroles(ctx):
 
 @bot.event
 async def on_member_join(member : discord.Member):
-    await bot.send_message(member,'Welcome to the EU Grandmaster Melee server! The bot will now attempt to automatically obtain your nationality and main from smashranking.eu')
+    await bot.send_message(member,'Welcome to the EU Grandmaster Melee server! The bot will now attempt to automatically obtain your country and main from smashranking.eu')
     result = getPlayerInfo(member.name.replace(' ','-').lower())
     if (result[0] == -1):
-        await bot.send_message(member,'Failed to set your nationality and/or main. Contact an admin for assistance')
+        await bot.send_message(member,'Failed to set your country and/or main. Contact an admin for assistance')
     else:
         if (await setRoles(member,result[1],member.server)):
-            await bot.send_message(member,'Your nationality and main are now set! Contact an admin if the bot got it wrong')
+            await bot.send_message(member,'Your country and main are now set! Contact an admin if the bot got it wrong')
         else:
             await bot.reply('Failed to set your roles despite your username being correct, contact an admin')
 
