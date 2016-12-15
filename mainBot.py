@@ -27,9 +27,9 @@ async def SR(*nameargs : str):
     name='-'.join(nameargs)
     result = getPlayerInfo(name.lower())
     if (result[0] == -1):
-        await bot.reply('Lookup failed, check that smashranking is up and that you typed the username correctly')
+        await bot.say('Lookup failed, check that smashranking is up and that you typed the username correctly')
     else:
-        await bot.reply('{0[tag]}: EU rank is {0[eurank]}, Nationality is {0[nationality]}, National rank is {0[country_rank]}, Main is {0[main]}'.format(result[1]))
+        await bot.say('{0[tag]}: EU rank is {0[eurank]}, country is {0[country]}, country rank is {0[country_rank]}, main is {0[main]}'.format(result[1]))
 
 def obtainRoleFromName(name,server):
     toReturn=[role for role in server.roles if role.name == name]
@@ -40,7 +40,7 @@ def obtainRoleFromName(name,server):
 
 async def setRoles(member,jsonresponse,server):
     mainrole=obtainRoleFromName(jsonresponse['main'],server)
-    nationalityrole=obtainRoleFromName(jsonresponse['nationality'],server)
+    nationalityrole=obtainRoleFromName(jsonresponse['country'],server)
     if (mainrole == None or nationalityrole == None):
         return False
     else:
