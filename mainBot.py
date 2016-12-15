@@ -41,13 +41,13 @@ def obtainRoleFromName(name,server):
 async def notify(ctx):
 	notifyRole=obtainRoleFromName('Notify',ctx.message.server)
 	await bot.add_roles(ctx.message.author,notifyRole)
-	await bot.reply('You will now be notified when the "Notify" tag is used')
+	await bot.send_message(ctx.message.author,'You will now be notified when the "Notify" tag is used')
 	
 @bot.command(description='Adds you to the notification group',pass_context=True)
 async def mute(ctx):
 	notifyRole=obtainRoleFromName('Notify',ctx.message.server)
 	await bot.remove_roles(ctx.message.author,notifyRole)
-	await bot.reply('You will no longer be notified when the "Notify" tag is used')
+	await bot.send_message(ctx.message.author,'You will no longer be notified when the "Notify" tag is used')
 	
 async def setRoles(member,jsonresponse,server):
     mainrole=obtainRoleFromName(jsonresponse['main'],server)
