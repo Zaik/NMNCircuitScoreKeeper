@@ -15,7 +15,7 @@ from SREUinterface import getPlayerInfo
 description = '''The EU Grandmaster Melee bot
 Handles various utility functions'''
 LARGE_NUMBER=9999999
-bot = commands.Bot(command_prefix='?', description=description, max_messages=LARGE_NUMBER)
+bot = commands.Bot(command_prefix='?', description=description)
 
 #Binding from tag to list, in date order, of post-IDs
 taggedPosts = {}
@@ -115,19 +115,20 @@ async def tag(post_id : str, *tags : str):
 		print("Printing JSON dump for backup purposes")
 		print(json.dumps(taggedPosts))
 
-def obtainPostsFromIDS(IDS):
+def obtainPostsFromIDS(IDS,channel):
+	poststosearch=bot.logs_from(channel,LARGE_NUMBER)
 	matchingPosts = [post for post in bot.messages if post.id in IDS]
 	return matchingPosts
 		
-@bot.command(description="Format: ?search tag1 tag2 ...\nPrints all posts, in order of posting, that have ALL the selected tags")
-async def search(*tags : str):
+@bot.command(pass_context=True,description="Format: ?search tag1 tag2 ...\nPrints all posts, in order of posting, that have ALL the selected tags")
+async def search(ctx,*tags : str):
 	if (len(tags) < 1):
 		bot.reply('Requires atleast one tag to search, blanket printing all posts is not allowed')
 		return
 	potentialposts=taggedPosts[tags[0]]
 	for tag in tags[1:]:
 		potentialposts=[post for post in  potentialposts if post in taggedPosts[tag] ]
-	actualposts=obtainPostsFromIDS(potentialposts)
+	actualposts=obtainPostsFromIDS(potentialposts,ctx.channel)
 	actualposts.sort(key=lambda x: x.timestamp)
 	if (len(actualposts) == 0):
 		await bot.reply("Sorry, there were no posts tagged with: " + " ".join(tags))
