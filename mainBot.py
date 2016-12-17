@@ -96,16 +96,16 @@ async def on_member_join(member : discord.Member):
 
 @bot.command(description="Format: ?tag <POST-ID> tag1 tag2 ...\nAdds the selected tags to the selected post-ID. Obtain post-IDs by right clicking options on a post")
 async def tag(post_id : str, *tags : str):
+	print(str(post_id) + ", " + str(tags))
 	if (len(tags) < 1):
 		bot.reply('Requires atleast one tag to tag')
 		return
 	for tag in tags:
 		proptag=tag.lower()
-			if (taggedPosts[proptag] != None):
-				taggedPosts[proptag]=taggedPosts[proptag].append(post_id)
-			else:
-				taggedPosts[proptag]=[post_id]
-        bot.reply('Tagging succesfull')
+		if (proptag in taggedPosts):
+			taggedPosts[proptag]=taggedPosts[proptag].append(post_id)
+		else:
+			taggedPosts[proptag]=[post_id]
 	print("Received new tagged post, saving new tag-ID map")
 	try:
 		json.dump(taggedPosts,open('tagidbindings.json','w'))
@@ -131,6 +131,7 @@ async def search(*tags : str):
 	actualposts.sort(key=lambda x: x.timestamp)
 	if (len(actualposts) == 0):
 		await bot.reply("Sorry, there were no posts tagged with: " + " ".join(tags))
+		return
 	await bot.say("Printing posts tagged with: " + " ".join(tags)) 
 	for post in actualposts:
 		await bot.say(post.author.name + "," + str(post.timestamp) + " (" + post.id + "): " + post.content)
