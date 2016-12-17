@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 import random
+import sys
+import json
 
 #It is also perfectly fine to replace "token" below with your actual token
 #, in qoutation marks
@@ -12,7 +14,7 @@ from SREUinterface import getPlayerInfo
 
 description = '''The EU Grandmaster Melee bot
 Handles various utility functions'''
-LARGE_NUMBER=999999999999999999
+LARGE_NUMBER=9999999
 bot = commands.Bot(command_prefix='?', description=description, max_messages=LARGE_NUMBER)
 
 #Binding from tag to list, in date order, of post-IDs
@@ -99,8 +101,11 @@ async def tag(post_id : str, *tags : str):
 		return
 	for tag in tags:
 		proptag=tag.lower()
-		taggedPosts[proptag]=taggedPosts[proptag].append(post_id)
-	bot.reply('Tagging succesfull')
+                if (taggedPosts[proptag] != None):
+                    taggedPosts[proptag]=taggedPosts[proptag].append(post_id)
+                else:
+                    taggedPosts[proptag]=[post_id]
+        bot.reply('Tagging succesfull')
 	print("Received new tagged post, saving new tag-ID map")
 	try:
 		json.dump(taggedPosts,open('tagidbindings.json','w'))
@@ -121,10 +126,10 @@ async def search(*tags : str):
 		return
 	potentialposts=taggedPosts[tags[0]]
 	for tag in tags[1:]:
-		potentialposts=[post in potentialposts if post in taggedPosts[tag]]
+		potentialposts=[post for post in  potentialposts if post in taggedPosts[tag] ]
 	actualposts=obtainPostsFromIDS(potentialposts)
 	actualposts.sort(key=lambda x: x.timestamp)
-	if (actualposts.len == 0)
+	if (len(actualposts) == 0):
 		await bot.reply("Sorry, there were no posts tagged with: " + " ".join(tags))
 	await bot.say("Printing posts tagged with: " + " ".join(tags)) 
 	for post in actualposts:
@@ -150,5 +155,6 @@ except Exception:
 	print("Failed to open local tag-ID bindings")
 	print("If this is because you don't have the file created, you're fine.")
 	print(sys.exc_info())
+
 bot.run(token)
 
