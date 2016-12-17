@@ -103,13 +103,16 @@ async def tag(post_id : str, *tags : str):
 	for tag in tags:
 		proptag=tag.lower()
 		if (proptag in taggedPosts):
-			taggedPosts[proptag].append(post_id)
+			taggedPosts[proptag].add(post_id)
 		else:
-			taggedPosts[proptag]=[post_id]
-	bot.reply("Tagging succesfull!")
+			taggedPosts[proptag]=set([post_id])
+	await bot.reply("Tagging succesfull!")
 	print("Received new tagged post, saving new tag-ID map")
 	try:
-		json.dump(taggedPosts,open('tagidbindings.json','w'))
+		toDump={}
+		for key in taggedPosts:
+			toDump[key]=list(taggedPosts[key])
+		json.dump(toDump,open('tagidbindings.json','w'))
 	except Exception:
 		print("WARNING: Failed to write tag-ID map:")
 		print(sys.exc_info())
@@ -128,6 +131,10 @@ async def search(ctx,*tags : str):
 	if (len(tags) < 1):
 		bot.reply('Requires atleast one tag to search, blanket printing all posts is not allowed')
 		return
+	for tag in tags:
+		if not tag in taggedPosts:
+			await bot.reply("There are no posts tagged with '"+tag+"'")
+			return
 	potentialposts=taggedPosts[tags[0]]
 	for tag in tags[1:]:
 		potentialposts=[post for post in  potentialposts if post in taggedPosts[tag] ]
@@ -155,7 +162,9 @@ async def search(ctx,*tags : str):
 
 print("Reading local tag-ID bindings...")
 try:
-	taggedPosts=json.load(open('tagidbindings.json','r'))
+	taggedPostsLists=json.load(open('tagidbindings.json','r'))
+	for key in taggedPostsLists:
+		taggedPosts[key]=set(taggedPostsLists[key])
 except Exception:
 	print("Failed to open local tag-ID bindings")
 	print("If this is because you don't have the file created, you're fine.")
