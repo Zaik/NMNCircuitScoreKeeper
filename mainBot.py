@@ -12,7 +12,11 @@ from SREUinterface import getPlayerInfo
 
 description = '''The EU Grandmaster Melee bot
 Handles various utility functions'''
-bot = commands.Bot(command_prefix='?', description=description)
+LARGE_NUMBER=999999999999999999
+bot = commands.Bot(command_prefix='?', description=description, max_messages=LARGE_NUMBER)
+
+#Binding from tag to list, in date order, of post-IDs
+taggedPosts = {}
 
 @bot.event
 async def on_ready():
@@ -68,7 +72,7 @@ async def setRoles(member,jsonresponse,server):
 async def obtainroles(ctx):
     result = getPlayerInfo(ctx.message.author.name.replace(' ','-').lower())
     if (result[0] == -1):
-        await bot.reply('Lookup failed, check that smashranking is up and that your username checks is the same as on smashranking')
+        await bot.reply('Lookup failed, check that smashranking is up and that your username is the same as on smashranking')
         await bot.reply('Contact an admin if the problem persists')
     else:
         if (await setRoles(ctx.message.author,result[1],ctx.message.server)):
@@ -88,6 +92,44 @@ async def on_member_join(member : discord.Member):
         else:
             await bot.reply('Failed to set your roles despite your username being correct, contact an admin')
 
+@bot.command(description="Format: ?tag <POST-ID> tag1 tag2 ...\nAdds the selected tags to the selected post-ID. Obtain post-IDs by right clicking options on a post")
+async def tag(post_id : str, *tags : str):
+	if (len(tags) < 1):
+		bot.reply('Requires atleast one tag to tag')
+		return
+	for tag in tags:
+		proptag=tag.lower()
+		taggedPosts[proptag]=taggedPosts[proptag].append(post_id)
+	bot.reply('Tagging succesfull')
+	print("Received new tagged post, saving new tag-ID map")
+	try:
+		json.dump(taggedPosts,open('tagidbindings.json','w'))
+	except Exception:
+		print("WARNING: Failed to write tag-ID map:")
+		print(sys.exc_info())
+		print("Printing JSON dump for backup purposes")
+		print(json.dumps(taggedPosts))
+
+def obtainPostsFromIDS(IDS):
+	matchingPosts = [post for post in bot.messages if post.id in IDS]
+	return matchingPosts
+		
+@bot.command(description="Format: ?search tag1 tag2 ...\nPrints all posts, in order of posting, that have ALL the selected tags")
+async def search(*tags : str):
+	if (len(tags) < 1):
+		bot.reply('Requires atleast one tag to search, blanket printing all posts is not allowed')
+		return
+	potentialposts=taggedPosts[tags[0]]
+	for tag in tags[1:]:
+		potentialposts=[post in potentialposts if post in taggedPosts[tag]]
+	actualposts=obtainPostsFromIDS(potentialposts)
+	actualposts.sort(key=lambda x: x.timestamp)
+	if (actualposts.len == 0)
+		await bot.reply("Sorry, there were no posts tagged with: " + " ".join(tags))
+	await bot.say("Printing posts tagged with: " + " ".join(tags)) 
+	for post in actualposts:
+		await bot.say(post.author.name + "," + str(post.timestamp) + " (" + post.id + "): " + post.content)
+
 # @bot.group(pass_context=True)
 # async def cool(ctx):
 #     """Says if a user is cool.
@@ -101,5 +143,12 @@ async def on_member_join(member : discord.Member):
 #     """Is the bot cool?"""
 #     await bot.say('Yes, the bot is cool.')
 
+print("Reading local tag-ID bindings...")
+try:
+	taggedPosts=json.load(open('tagidbindings.json','r'))
+except Exception:
+	print("Failed to open local tag-ID bindings")
+	print("If this is because you don't have the file created, you're fine.")
+	print(sys.exc_info())
 bot.run(token)
 
