@@ -101,10 +101,10 @@ async def tag(post_id : str, *tags : str):
 		return
 	for tag in tags:
 		proptag=tag.lower()
-                if (taggedPosts[proptag] != None):
-                    taggedPosts[proptag]=taggedPosts[proptag].append(post_id)
-                else:
-                    taggedPosts[proptag]=[post_id]
+			if (taggedPosts[proptag] != None):
+				taggedPosts[proptag]=taggedPosts[proptag].append(post_id)
+			else:
+				taggedPosts[proptag]=[post_id]
         bot.reply('Tagging succesfull')
 	print("Received new tagged post, saving new tag-ID map")
 	try:
