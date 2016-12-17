@@ -103,9 +103,10 @@ async def tag(post_id : str, *tags : str):
 	for tag in tags:
 		proptag=tag.lower()
 		if (proptag in taggedPosts):
-			taggedPosts[proptag]=taggedPosts[proptag].append(post_id)
+			taggedPosts[proptag].append(post_id)
 		else:
 			taggedPosts[proptag]=[post_id]
+	bot.reply("Tagging succesfull!")
 	print("Received new tagged post, saving new tag-ID map")
 	try:
 		json.dump(taggedPosts,open('tagidbindings.json','w'))
@@ -115,9 +116,11 @@ async def tag(post_id : str, *tags : str):
 		print("Printing JSON dump for backup purposes")
 		print(json.dumps(taggedPosts))
 
-def obtainPostsFromIDS(IDS,channel):
-	poststosearch=bot.logs_from(channel,LARGE_NUMBER)
-	matchingPosts = [post for post in bot.messages if post.id in IDS]
+async def obtainPostsFromIDS(IDS,channel):
+	matchingPosts=[]
+	async for post in bot.logs_from(channel,LARGE_NUMBER):
+		matchingPosts.append(post)
+	matchingPosts = [post for post in matchingPosts if post.id in IDS]
 	return matchingPosts
 		
 @bot.command(pass_context=True,description="Format: ?search tag1 tag2 ...\nPrints all posts, in order of posting, that have ALL the selected tags")
@@ -128,14 +131,14 @@ async def search(ctx,*tags : str):
 	potentialposts=taggedPosts[tags[0]]
 	for tag in tags[1:]:
 		potentialposts=[post for post in  potentialposts if post in taggedPosts[tag] ]
-	actualposts=obtainPostsFromIDS(potentialposts,ctx.channel)
+	actualposts=await obtainPostsFromIDS(potentialposts,ctx.message.channel)
 	actualposts.sort(key=lambda x: x.timestamp)
 	if (len(actualposts) == 0):
 		await bot.reply("Sorry, there were no posts tagged with: " + " ".join(tags))
 		return
 	await bot.say("Printing posts tagged with: " + " ".join(tags)) 
 	for post in actualposts:
-		await bot.say(post.author.name + "," + str(post.timestamp) + " (" + post.id + "): " + post.content)
+		await bot.say(post.author.name + "@" + str(post.timestamp) +" (" + post.id + "):\n" + post.content)
 
 # @bot.group(pass_context=True)
 # async def cool(ctx):
