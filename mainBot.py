@@ -83,23 +83,24 @@ async def obtainroles(ctx):
             await bot.reply('Failed to set your roles despite your username being correct, contact an admin')
 			
 @bot.command(description='Format: ?obtainroles <MENTION> <ID>\nSets someones roles based on a particular smashranking.eu ID. MOD ONLY',pass_context=True)
-async def obtainroles(ctx, membertoset : discord.Member, IDtoUse : str):
-	#check privileges of author
-	if (not ctx.message.author.manage_roles()):
-		await bot.reply('You cannot use this command.')
-    result = getPlayerInfo(IDtoUSE.lower())
+async def setroles(ctx, membertoset : discord.Member, IDtoUse : str):
+    #check privileges of author
+    if (not ctx.message.author.server_permissions.manage_roles):
+        await bot.reply('You cannot use this command.')
+        return
+    result = getPlayerInfo(IDtoUse.lower())
     if (result[0] == -1):
         await bot.reply('Lookup failed, check that smashranking is up and that the ID used exists on smashranking (you can try "id-<nationality abbreviation>"')
         await bot.reply('Contact an admin if the problem persists')
     else:
         if (await setRoles(membertoset,result[1],ctx.message.server)):
-            await bot.reply(membertoset.mention() + ' roles have been correctly setup from smashranking')
+            await bot.reply(membertoset.mention + ' roles have been correctly setup from smashranking')
         else:
             await bot.reply('Failed to set roles despite the ID existing')
 
 @bot.command(description='Format: ?setroles <ID>\nSets your roles based on a particular smashranking.eu ID. Useful if your discord nickname is not the same as your smashranking.eu identifier.',pass_context=True)
-async def obtainroles(ctx, IDtoUse : str):
-    result = getPlayerInfo(IDtoUSE.lower())
+async def obtainroles_id(ctx, IDtoUse : str):
+    result = getPlayerInfo(IDtoUse.lower())
     if (result[0] == -1):
         await bot.reply('Lookup failed, check that smashranking is up and that the ID used exists on smashranking (you can try "id-<nationality abbreviation>"')
         await bot.reply('Contact an admin if the problem persists')
