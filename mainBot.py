@@ -11,6 +11,7 @@ from credentials import token
 
 import SREUinterface
 from SREUinterface import getPlayerInfo
+from SREUinterface import getPlayerHighestSlug
 
 description = '''The EU Grandmaster Melee bot
 Handles various utility functions'''
@@ -32,9 +33,15 @@ async def SR(*nameargs : str):
     name='-'.join(nameargs)
     result = getPlayerInfo(name.lower())
     if (result[0] == -1):
-        await bot.say('Lookup failed, check that smashranking is up and that you typed the username correctly')
-    else:
+        #Try to find other slugs
+        secondslug=getPlayerHighestSlug(name)
+        if (secondslug[0] == 0):
+            result = getPlayerInfo(secondslug[1])
+            name=secondslug[1]
+    if (result[0] == 0):
         await bot.say('{0[tag]}: EU rank is {0[eurank]}, country is {0[country]}, country rank is {0[country_rank]}, main is {0[main]}\nData consolidated from http://smashranking.eu/smashers/{1}'.format(result[1],name))
+    else:
+        await bot.say('Lookup failed, check that smashranking is up and that you typed the username correctly')
 
 def obtainRoleFromName(name,server):
     toReturn=[role for role in server.roles if role.name == name]

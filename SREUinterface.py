@@ -32,4 +32,23 @@ def getPlayerInfo(name : str):
         return (0,result[1])
     else:
         return (-1,result[1])
+
+#Takes a players non-slug name, searches for slugs starting with it. finds the one with the highest rank
+#returns the proper slug (or an error if SR is down or no slug found)
+def getPlayerHighestSlug(name : str):
+    rankingresult = doJSONRequest("http://smashranking.eu/api/ranking/")
+    if (rankingresult[0] != 0):
+        return (-1,rankingresult[1])
+    slug = None
+    rank = -1
+    for (entry : rankingresult):
+        if (entry["slug"].startswith(name)):
+            if (len(entry["slug"]) - len(name) < 3):
+                if (entry["eurank"] < rank or rank = -1):
+                    slug=entry["slug"]
+                    rank=entry["eurank"]
+                    break
+    if (slug == None):
+        return (-1,None)
+    return (0,slug)
     
