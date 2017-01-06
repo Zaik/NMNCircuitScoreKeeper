@@ -55,6 +55,12 @@ async def notify(ctx):
 	notifyRole=obtainRoleFromName('Notify',ctx.message.server)
 	await bot.add_roles(ctx.message.author,notifyRole)
 	await bot.send_message(ctx.message.author,'You will now be notified when the "Notify" tag is used')
+
+@bot.command(description='Adds you to the notification group',pass_context=True)
+async def Notify(ctx):
+	notifyRole=obtainRoleFromName('Notify',ctx.message.server)
+	await bot.add_roles(ctx.message.author,notifyRole)
+	await bot.send_message(ctx.message.author,'You will now be notified when the "Notify" tag is used')
 	
 @bot.command(description='Adds you to the notification group',pass_context=True)
 async def mute(ctx):
@@ -121,9 +127,16 @@ async def obtainroles_id(ctx, IDtoUse : str):
 @bot.event
 async def on_member_join(member : discord.Member):
     await bot.send_message(member,'Welcome to the EU Grandmaster Melee server! The bot will now attempt to automatically obtain your country and main from smashranking.eu')
-    result = getPlayerInfo(member.name.replace(' ','-').lower())
+    name=member.name.replace(' ','-').lower()
+    result = getPlayerInfo(name)
     if (result[0] == -1):
-        await bot.send_message(member,'Failed to set your country and/or main. Contact an admin for assistance')
+        #Try to find other slugs
+        secondslug=getPlayerHighestSlug(name)
+        if (secondslug[0] == 0):
+            result = getPlayerInfo(secondslug[1])
+            name=secondslug[1]
+    if (result[0] == -1):
+        await bot.send_message(member,'Failed to set your country and/or main automatically. Contact an admin for assistance')
     else:
         if (await setRoles(member,result[1],member.server)):
             await bot.send_message(member,'Your country and main are now set! Contact an admin if the bot got it wrong')
