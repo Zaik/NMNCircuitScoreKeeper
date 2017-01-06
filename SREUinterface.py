@@ -43,7 +43,7 @@ def getPlayerHighestSlug(name : str):
     rank = -1
     for entry in rankingresult[1]:
         if (entry["slug"].startswith(name)):
-            if (len(entry["slug"]) - len(name) < 3):
+            if (len(entry["slug"]) - len(name) < 4 and entry["slug"][len(name)]=='-'):
                 if (entry["eurank"] < rank or rank == -1):
                     slug=entry["slug"]
                     rank=entry["eurank"]
