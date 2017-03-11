@@ -1,5 +1,5 @@
-# EUGMbot
-Created at 13/12/2016
+# NMNCircuitScoreKeeper
+Created at 05/03/2017
 Created by Jonatan Waern
 
-Automated discord bot for the EU GrandMaster Melee group
+Automation of score calculation based on smash.gg tournament results

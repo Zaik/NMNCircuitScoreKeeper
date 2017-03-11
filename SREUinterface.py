@@ -1,54 +1,35 @@
-import urllib.request
-import json
+#This is the file responsible for reading data from smash.gg
+
+#You should be able to obtain a COMPLETE list of simplified matches
+#and a COMPLETE list of simplified final standings
+
 import sys
+import pysmash
 
-#Return a tuple (code,response)
-#code = 0 if succesfull
-#       -1 if there was an error connecting
-#       -2 if website returns an error
-#response = The resulting string of the request
-#           The exception or error code if unsuccesfull
-def doWebRequest(url : str):
-    try:
-        result = urllib.request.urlopen(url)
-    except:
-        print("Protocol Error on " + url + ", " + str(sys.exc_info()))
-        return (-1,sys.exc_info()[0])
-    if (result.getcode() < 200 or result.getcode() >= 300):
-        print("Bad HTTP answer from " + url + ", " + str(result.getcode()))
-        return (-2,result.getcode())
-    return (0,result.read().decode(result.info().get_param('charset') or 'utf-8'))
+smash = pysmash.SmashGG()
 
-def doJSONRequest(url : str):
-    result = doWebRequest(url)
-    if (result[0] != 0):
-        return result
-    jsonresult = json.loads(result[1])
-    return (0,jsonresult)
+#Given a the slug for a tournament, obtain the IDs for each phase_group (bracket)
+#in that tournament
+def get_sets_info(tournament_name, event_name):
+	print("Obtaining set info...")
+	sets = smash.tournament_show_sets(tournament_name, event_name)
+	print("Done")
+	return [{'winner'     : str(set['winner_id']),
+			 'loser'      : str(set['loser_id']),
+			 'no_contest' : set['entrant_1_score'] < 0 or set['entrant_2_score'] < 0}
+			 for set in sets if set['entrant_1_score'] != None]
+	
+#Given a phase_group ID, obtain the sets, entrants, standings and seeding for that group
+def get_players_info(tournament_name, event_name):
+	print("Obtaining player info...")
+	players = smash.tournament_show_players(tournament_name, event_name)
+	print("Done")
+	return [{'id'      : str(player['entrant_id']),
+			 'tag'     : player['tag'],
+			 'seed'    : player['seed'],
+			 'placing' : player['final_placement']}
+			 for player in players]
 
-def getPlayerInfo(name : str):
-    result = doJSONRequest("http://smashranking.eu/api/smashers/"+name)
-    if (result[0] == 0):
-        return (0,result[1])
-    else:
-        return (-1,result[1])
-
-#Takes a players non-slug name, searches for slugs starting with it. finds the one with the highest rank
-#returns the proper slug (or an error if SR is down or no slug found)
-def getPlayerHighestSlug(name : str):
-    rankingresult = doJSONRequest("http://smashranking.eu/api/ranking/")
-    if (rankingresult[0] != 0):
-        return (-1,rankingresult[1])
-    slug = None
-    rank = -1
-    for entry in rankingresult[1]:
-        if (entry["slug"].startswith(name)):
-            if (len(entry["slug"]) - len(name) < 4 and entry["slug"][len(name)]=='-'):
-                if (entry["eurank"] < rank or rank == -1):
-                    slug=entry["slug"]
-                    rank=entry["eurank"]
-                    break
-    if (slug == None):
-        return (-1,None)
-    return (0,slug)
-    
+def get_tournament_info(tournament_name, event_name):
+	return (get_sets_info(tournament_name, event_name),
+			get_players_info(tournament_name, event_name))
